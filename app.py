@@ -2,8 +2,6 @@ import streamlit as st
 import dask.dataframe as dd
 import requests
 
-# --- Path to your background video ---
-video_path = r"C:\Users\Amanjot Singh\Desktop\movie project\54032-476396483.mp4"
 
 # --- Function to Fetch Poster from OMDb API ---
 @st.cache_data
@@ -19,31 +17,38 @@ def get_poster(title):
     except Exception:
         return "https://via.placeholder.com/80x220?text=No+Poster"
 
+
 # --- Load Data (cached for speed) ---
 @st.cache_data
 def load_data():
     return dd.read_csv('merged_final4.csv', assume_missing=True)
 
+
 df = load_data()
 
-# --- Background Video & Title ---
+
+# --- Background & Title ---
 st.markdown(f"""
 <style>
-.bg-video {{
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  min-width: 100%;
-  min-height: 100%;
-  z-index: -1;
-  object-fit: cover;
-  opacity: 0.5;
+/* Animated gradient background */
+[data-testid="stAppViewContainer"] {{
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
 }}
+
+@keyframes gradientBG {{
+  0% {{ background-position: 0% 50%; }}
+  50% {{ background-position: 100% 50%; }}
+  100% {{ background-position: 0% 50%; }}
+}}
+
 @keyframes gradientFlow {{
   0% {{ background-position: 0% 50%; }}
   50% {{ background-position: 80% 50%; }}
   80% {{ background-position: 0% 50%; }}
 }}
+
 .title {{
   text-align: center;
   font-size: 45px;
@@ -55,6 +60,7 @@ st.markdown(f"""
   animation: gradientFlow 6s ease infinite;
   margin-bottom: 8px;
 }}
+
 .subtitle {{
   text-align: center;
   font-size: 22px;
@@ -63,14 +69,17 @@ st.markdown(f"""
   animation: fadeIn 2s ease;
   margin-bottom: 40px;
 }}
+
 @keyframes fadeIn {{
   from {{opacity: 0;}}
   to {{opacity: 1;}}
 }}
+
 div[data-testid="stHorizontalBlock"] {{
   justify-content: center;
   align-items: center;
 }}
+
 .stButton > button {{
   width: 90%;
   background: linear-gradient(90deg, #ff6a00, #ee0979);
@@ -82,25 +91,25 @@ div[data-testid="stHorizontalBlock"] {{
   border-radius: 12px;
   transition: 0.3s;
 }}
+
 .stButton > button:hover {{
   transform: scale(1.05);
   background: linear-gradient(90deg, #ee0979, #00c3ff);
 }}
 </style>
 
-<video autoplay muted loop class="bg-video">
-  <source src="file:///{video_path}" type="video/mp4">
-</video>
-
 <h1 class="title">🎥 Welcome to My Movie Recommendation Site 🎬</h1>
 <h3 class="subtitle">Choose the factors to search the movies</h3>
 """, unsafe_allow_html=True)
 
+
 # --- Button Layout ---
 col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1], gap="large")
 
+
 if "active_filter" not in st.session_state:
     st.session_state.active_filter = None
+
 
 # Buttons
 with col1:
@@ -116,12 +125,15 @@ with col4:
     if st.button("🌐 Language"):
         st.session_state.active_filter = "language"
 
+
 # Clear previous results section before showing new
 if "last_output" not in st.session_state:
     st.session_state.last_output = st.empty()
 st.session_state.last_output.empty()
 
+
 # ================= FILTER LOGIC ================= #
+
 
 # --- Ratings Filter ---
 if st.session_state.active_filter == "rating":
@@ -152,6 +164,7 @@ if st.session_state.active_filter == "rating":
         else:
             st.info("No movies match this rating.")
 
+
 # --- Genre Filter ---
 elif st.session_state.active_filter == "genre":
     st.success("You have selected Genre filter")
@@ -180,6 +193,7 @@ elif st.session_state.active_filter == "genre":
                 """, unsafe_allow_html=True)
         else:
             st.info("No movies match this genre.")
+
 
 # --- Actor Filter ---
 elif st.session_state.active_filter == "actor":
@@ -211,6 +225,7 @@ elif st.session_state.active_filter == "actor":
                     """, unsafe_allow_html=True)
             else:
                 st.info("No movies match this cast.")
+
 
 # --- Language Filter ---
 elif st.session_state.active_filter == "language":
