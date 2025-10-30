@@ -1,6 +1,12 @@
 import streamlit as st
 import dask.dataframe as dd
 import requests
+import pandas as pd
+from io import StringIO
+
+# --- Google Drive Dataset URL ---
+DRIVE_FILE_ID = "1ErVPn402X-xHzsfswvqU0uEggDZKAk6k"
+DRIVE_URL = f"https://drive.google.com/uc?export=download&id={DRIVE_FILE_ID}"
 
 
 # --- Function to Fetch Poster from OMDb API ---
@@ -18,13 +24,27 @@ def get_poster(title):
         return "https://via.placeholder.com/80x220?text=No+Poster"
 
 
-# --- Load Data (cached for speed) ---
+# --- Load Data from Google Drive (cached for speed) ---
 @st.cache_data
 def load_data():
-    return dd.read_csv('merged_final4.csv', assume_missing=True)
+    try:
+        # Download CSV from Google Drive
+        response = requests.get(DRIVE_URL)
+        response.raise_for_status()
+        
+        # Load into pandas first, then convert to dask
+        df_pandas = pd.read_csv(StringIO(response.text))
+        df = dd.from_pandas(df_pandas, npartitions=4)
+        return df
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
+        return None
 
 
 df = load_data()
+
+if df is None:
+    st.stop()
 
 
 # --- Background & Title ---
