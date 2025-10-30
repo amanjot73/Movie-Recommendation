@@ -2,11 +2,12 @@ import streamlit as st
 import dask.dataframe as dd
 import requests
 import pandas as pd
-from io import StringIO
+import gdown
+import os
 
 # --- Google Drive Dataset URL ---
 DRIVE_FILE_ID = "1ErVPn402X-xHzsfswvqU0uEggDZKAk6k"
-DRIVE_URL = f"https://drive.google.com/uc?export=download&id={DRIVE_FILE_ID}"
+DRIVE_URL = f"https://drive.google.com/uc?id={DRIVE_FILE_ID}"
 
 
 # --- Function to Fetch Poster from OMDb API ---
@@ -28,12 +29,16 @@ def get_poster(title):
 @st.cache_data
 def load_data():
     try:
-        # Download CSV from Google Drive
-        response = requests.get(DRIVE_URL)
-        response.raise_for_status()
+        # Download CSV from Google Drive using gdown
+        csv_file = "merged_final4.csv"
+        
+        # Download file if it doesn't exist
+        if not os.path.exists(csv_file):
+            with st.spinner("Downloading dataset from Google Drive..."):
+                gdown.download(DRIVE_URL, csv_file, quiet=False)
         
         # Load into pandas first, then convert to dask
-        df_pandas = pd.read_csv(StringIO(response.text))
+        df_pandas = pd.read_csv(csv_file)
         df = dd.from_pandas(df_pandas, npartitions=4)
         return df
     except Exception as e:
